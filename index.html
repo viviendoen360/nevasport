@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NevaSport - Tienda Oficial</title>
+    
+    <!-- React y ReactDOM (El motor de la app) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel (Para entender el código moderno) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS (Para el diseño bonito) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configuración de colores de Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        lime: {
+                            400: '#a3e635',
+                            300: '#bef264',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Estilos base para scroll suave */
+        html { scroll-behavior: smooth; }
+        body { background-color: #0f172a; }
+        
+        /* Animaciones simples */
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- ICONOS (SVG Directos para no depender de librerías externas) ---
+        const Icon = ({ path, className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {path}
+            </svg>
+        );
+
+        const Icons = {
+            ShoppingBag: (props) => <Icon {...props} path={<><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></>} />,
+            Plus: (props) => <Icon {...props} path={<><path d="M5 12h14"/><path d="M12 5v14"/></>} />,
+            Trash2: (props) => <Icon {...props} path={<><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></>} />,
+            Smartphone: (props) => <Icon {...props} path={<><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></>} />,
+            Send: (props) => <Icon {...props} path={<><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></>} />,
+            Instagram: (props) => <Icon {...props} path={<><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></>} />,
+            Menu: (props) => <Icon {...props} path={<><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></>} />,
+            X: (props) => <Icon {...props} path={<><path d="M18 6 6 18"/><path d="m6 6 12 12"/></>} />,
+            Tag: (props) => <Icon {...props} path={<><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></>} />,
+            DollarSign: (props) => <Icon {...props} path={<><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>} />,
+            ImageIcon: (props) => <Icon {...props} path={<><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></>} />
+        };
+
+        // --- DATOS INICIALES ---
+        const INITIAL_PRODUCTS = [
+            {
+                id: 1,
+                name: "Runner Pro V3",
+                price: 85.00,
+                category: "Calzado",
+                image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1000&auto=format&fit=crop",
+                description: "Zapatillas de alto rendimiento para maratón."
+            },
+            {
+                id: 2,
+                name: "Camiseta Dry-Fit",
+                price: 25.50,
+                category: "Ropa",
+                image: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?q=80&w=1000&auto=format&fit=crop",
+                description: "Tecnología de secado rápido, ideal para gimnasio."
+            },
+            {
+                id: 3,
+                name: "Urban Style X",
+                price: 110.00,
+                category: "Calzado",
+                image: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?q=80&w=1000&auto=format&fit=crop",
+                description: "Estilo urbano con la comodidad deportiva."
+            },
+            {
+                id: 4,
+                name: "Short Entrenamiento",
+                price: 30.00,
+                category: "Ropa",
+                image: "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?q=80&w=1000&auto=format&fit=crop",
+                description: "Libertad de movimiento total."
+            }
+        ];
+
+        // --- COMPONENTE PRINCIPAL ---
+        function App() {
+            const [products, setProducts] = useState(INITIAL_PRODUCTS);
+            const [isAdmin, setIsAdmin] = useState(false);
+            const [isMenuOpen, setIsMenuOpen] = useState(false);
+            const [filter, setFilter] = useState('Todos');
+            
+            const [newProduct, setNewProduct] = useState({
+                name: '', price: '', category: 'Calzado', image: '', description: ''
+            });
+            const [showAddForm, setShowAddForm] = useState(false);
+
+            // IMPORTANTE: CAMBIAR ESTO POR EL NÚMERO REAL
+            const SELLER_PHONE = "593999999999"; 
+
+            const categories = ['Todos', 'Calzado', 'Ropa', 'Accesorios'];
+
+            const handleAddProduct = (e) => {
+                e.preventDefault();
+                if (!newProduct.name || !newProduct.price) return;
+
+                const product = {
+                    id: Date.now(),
+                    ...newProduct,
+                    price: parseFloat(newProduct.price),
+                    image: newProduct.image || "https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1000&auto=format&fit=crop"
+                };
+
+                setProducts([product, ...products]);
+                setNewProduct({ name: '', price: '', category: 'Calzado', image: '', description: '' });
+                setShowAddForm(false);
+            };
+
+            const handleDeleteProduct = (id) => {
+                if (confirm('¿Seguro que quieres eliminar este producto?')) {
+                    setProducts(products.filter(p => p.id !== id));
+                }
+            };
+
+            const generateWhatsAppLink = (product) => {
+                const message = `Hola NevaSport, estoy interesado en: ${product.name} (Precio: $${product.price})`;
+                return `https://wa.me/${SELLER_PHONE}?text=${encodeURIComponent(message)}`;
+            };
+
+            const filteredProducts = filter === 'Todos' ? products : products.filter(p => p.category === filter);
+
+            return (
+                <div className="min-h-screen bg-slate-900 text-white font-sans selection:bg-lime-400 selection:text-slate-900">
+                    
+                    {/* Navbar */}
+                    <nav className="fixed w-full z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="flex items-center justify-between h-20">
+                                <div className="flex items-center gap-2">
+                                    <div className="bg-lime-400 p-2 rounded-lg">
+                                        <Icons.ShoppingBag className="h-6 w-6 text-slate-900" />
+                                    </div>
+                                    <span className="text-2xl font-bold tracking-tighter">
+                                        NEVA<span className="text-lime-400">SPORT</span>
+                                    </span>
+                                </div>
+                                
+                                <div className="hidden md:block">
+                                    <div className="ml-10 flex items-baseline space-x-4">
+                                        {categories.map((cat) => (
+                                            <button
+                                                key={cat}
+                                                onClick={() => setFilter(cat)}
+                                                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                                    filter === cat 
+                                                        ? 'text-lime-400 bg-slate-800' 
+                                                        : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                                                }`}
+                                            >
+                                                {cat}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-4">
+                                    <button 
+                                        onClick={() => setIsAdmin(!isAdmin)}
+                                        className={`text-xs px-2 py-1 rounded border ${isAdmin ? 'border-lime-400 text-lime-400' : 'border-slate-700 text-slate-500'}`}
+                                    >
+                                        {isAdmin ? 'Modo Admin' : 'Admin'}
+                                    </button>
+                                    
+                                    <div className="md:hidden">
+                                        <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 text-slate-400">
+                                            {isMenuOpen ? <Icons.X /> : <Icons.Menu />}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Mobile Menu */}
+                        {isMenuOpen && (
+                            <div className="md:hidden bg-slate-800 pb-4 px-4">
+                                {categories.map((cat) => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => { setFilter(cat); setIsMenuOpen(false); }}
+                                        className="block w-full text-left px-3 py-2 text-base font-medium text-slate-300 hover:text-white"
+                                    >
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </nav>
+
+                    {/* Hero Section */}
+                    <div className="pt-32 pb-12 px-4 text-center bg-gradient-to-b from-slate-900 to-slate-800">
+                        <h1 className="text-5xl md:text-6xl font-bold mb-4 tracking-tight">
+                            SUPERA TUS <span className="text-transparent bg-clip-text bg-gradient-to-r from-lime-400 to-emerald-500">LÍMITES</span>
+                        </h1>
+                        <p className="text-slate-400 max-w-2xl mx-auto text-lg mb-8">
+                            El mejor equipamiento deportivo seleccionado por Ever Nevarez. 
+                            Calidad profesional para atletas reales.
+                        </p>
+                        <a 
+                            href={`https://wa.me/${SELLER_PHONE}`} 
+                            target="_blank" 
+                            className="inline-flex items-center gap-2 bg-lime-400 text-slate-900 px-6 py-3 rounded-full font-bold hover:bg-lime-300 transition-transform hover:scale-105"
+                        >
+                            <Icons.Smartphone className="w-5 h-5" /> Contáctanos
+                        </a>
+                    </div>
+
+                    {/* Admin Panel */}
+                    {isAdmin && (
+                        <div className="max-w-7xl mx-auto px-4 mb-12 fade-in">
+                            <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                        <Icons.Plus className="text-lime-400" /> Panel de Administración
+                                    </h2>
+                                    <button 
+                                        onClick={() => setShowAddForm(!showAddForm)}
+                                        className="text-sm bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded"
+                                    >
+                                        {showAddForm ? 'Cancelar' : 'Nuevo Producto'}
+                                    </button>
+                                </div>
+
+                                {showAddForm && (
+                                    <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm text-slate-400">Nombre</label>
+                                            <div className="relative">
+                                                <div className="absolute left-3 top-3 w-4 h-4 text-slate-500"><Icons.Tag className="w-4 h-4"/></div>
+                                                <input 
+                                                    type="text" placeholder="Ej: Nike Air Zoom" 
+                                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 pl-10 pr-4 text-white focus:outline-none focus:border-lime-400"
+                                                    value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm text-slate-400">Precio</label>
+                                            <div className="relative">
+                                                <div className="absolute left-3 top-3 w-4 h-4 text-slate-500"><Icons.DollarSign className="w-4 h-4"/></div>
+                                                <input 
+                                                    type="number" placeholder="0.00" 
+                                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 pl-10 pr-4 text-white focus:outline-none focus:border-lime-400"
+                                                    value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm text-slate-400">Categoría</label>
+                                            <select 
+                                                className="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-4 text-white focus:outline-none focus:border-lime-400"
+                                                value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}
+                                            >
+                                                <option value="Calzado">Calzado</option>
+                                                <option value="Ropa">Ropa</option>
+                                                <option value="Accesorios">Accesorios</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm text-slate-400">URL Imagen</label>
+                                            <div className="relative">
+                                                <div className="absolute left-3 top-3 w-4 h-4 text-slate-500"><Icons.ImageIcon className="w-4 h-4"/></div>
+                                                <input 
+                                                    type="text" placeholder="https://..." 
+                                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 pl-10 pr-4 text-white focus:outline-none focus:border-lime-400"
+                                                    value={newProduct.image} onChange={e => setNewProduct({...newProduct, image: e.target.value})}
+                                                />
+                                            </div>
+                                        </div>
+                                        <button type="submit" className="md:col-span-2 bg-lime-400 text-slate-900 font-bold py-2 rounded-lg hover:bg-lime-300">Guardar</button>
+                                    </form>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Product Grid */}
+                    <div className="max-w-7xl mx-auto px-4 pb-20">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                            {filteredProducts.map((product) => (
+                                <div key={product.id} className="group bg-slate-800 rounded-2xl overflow-hidden border border-slate-700 hover:border-lime-400/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-lime-400/10 fade-in">
+                                    <div className="relative h-64 overflow-hidden">
+                                        <img 
+                                            src={product.image} alt={product.name} 
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                            onError={(e) => {e.target.src = 'https://placehold.co/600x400/1e293b/a3e635?text=No+Image'}}
+                                        />
+                                        <div className="absolute top-2 right-2 bg-slate-900/80 backdrop-blur text-white text-xs font-bold px-2 py-1 rounded">
+                                            {product.category}
+                                        </div>
+                                        {isAdmin && (
+                                            <button 
+                                                onClick={() => handleDeleteProduct(product.id)}
+                                                className="absolute top-2 left-2 bg-red-500/90 p-2 rounded-full text-white hover:bg-red-600 transition-colors"
+                                            >
+                                                <Icons.Trash2 className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="p-5">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className="text-lg font-bold text-white leading-tight">{product.name}</h3>
+                                            <span className="text-lime-400 font-bold text-lg">${product.price}</span>
+                                        </div>
+                                        <p className="text-slate-400 text-sm mb-4 line-clamp-2">{product.description}</p>
+                                        <a 
+                                            href={generateWhatsAppLink(product)}
+                                            target="_blank"
+                                            className="w-full flex items-center justify-center gap-2 bg-slate-700 hover:bg-lime-400 hover:text-slate-900 text-white py-3 rounded-xl font-medium transition-all group-hover:bg-lime-400 group-hover:text-slate-900"
+                                        >
+                                            <Icons.Send className="w-4 h-4" /> Lo quiero
+                                        </a>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        {filteredProducts.length === 0 && (
+                            <div className="text-center py-20 text-slate-500">
+                                <Icons.ShoppingBag className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                                <p>No hay productos en esta categoría.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <footer className="bg-slate-950 border-t border-slate-800 py-12">
+                        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+                            <div className="text-center md:text-left">
+                                <h4 className="text-xl font-bold text-white mb-2">NEVA<span className="text-lime-400">SPORT</span></h4>
+                                <p className="text-slate-500 text-sm">Equipando atletas desde 2024.</p>
+                            </div>
+                            <div className="flex gap-6 text-slate-400">
+                                <Icons.Instagram className="w-6 h-6 hover:text-lime-400 cursor-pointer"/>
+                                <Icons.Smartphone className="w-6 h-6 hover:text-lime-400 cursor-pointer"/>
+                            </div>
+                            <div className="text-slate-600 text-sm">
+                                © {new Date().getFullYear()} NevaSport.
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
